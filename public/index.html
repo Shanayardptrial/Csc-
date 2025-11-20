@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Seva Kendra - Verified CSC Operator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=VT323&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles */
+        .hidden {
+            display: none;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.3);
+        }
+
+        /* Dot Matrix Print Style */
+        .dot-matrix {
+            font-family: 'VT323', monospace;
+            letter-spacing: 1px;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #receipt-area,
+            #receipt-area * {
+                visibility: visible;
+            }
+
+            #receipt-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                color: black;
+                background: white;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-brand-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-500/20">
+                        <span class="text-xl font-bold text-white">DS</span>
+                    </div>
+                    <div>
+                        <span class="block text-lg font-bold text-white leading-none">Digital Seva</span>
+                        <span class="text-xs text-slate-400 uppercase tracking-wider">Verified Kendra</span>
+                    </div>
+                </div>
+                <div id="nav-links" class="flex items-center space-x-6">
+                    <button onclick="showPage('landing')"
+                        class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Home</button>
+                    <button onclick="showPage('landing')"
+                        class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Services</button>
+                    <button id="login-btn" onclick="showPage('login')"
+                        class="bg-white text-slate-900 hover:bg-brand-50 px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-white/10">Login</button>
+                    <button id="logout-btn" onclick="logout()"
+                        class="hidden bg-red-500/10 text-red-400 hover:bg-red-500/20 px-5 py-2.5 rounded-full text-sm font-medium transition-all border border-red-500/20">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+        <!-- Landing Page -->
+        <div id="landing-page" class="page">
+            <!-- Hero -->
+            <div class="text-center max-w-4xl mx-auto mb-20">
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-500 text-sm font-medium mb-8">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                    </span>
+                    Online Consultation Available
+                </div>
+                <h1 class="text-5xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight mb-8">
+                    Your Trusted Partner for <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-600">Government
+                        Services</span>
+                </h1>
+                <p class="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+                    Skip the long queues. Get expert assistance for Aadhar, PAN, Driving Licence, and more directly from
+                    your home via video consultation.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="showPage('login')"
+                        class="w-full sm:w-auto px-8 py-4 rounded-full text-white bg-brand-600 hover:bg-brand-500 font-semibold shadow-lg shadow-brand-500/25 transition-all hover:scale-105">
+                        Book Consultation - ₹50
+                    </button>
+                    <button
+                        class="w-full sm:w-auto px-8 py-4 rounded-full text-slate-300 bg-slate-800 hover:bg-slate-700 font-medium border border-slate-700 transition-all">
+                        View All Services
+                    </button>
+                </div>
+            </div>
+
+            <!-- Services Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+                <!-- Service 1 -->
+                <div
+                    class="service-card p-6 rounded-2xl bg-slate-900 border border-slate-800 transition-all group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-orange-500/20 transition-colors">
+                        🆔</div>
+                    <h3 class="text-lg font-bold text-white mb-2">Aadhar Services</h3>
+                    <p class="text-sm text-slate-400">Update address, link mobile, or download e-Aadhar with expert
+                        guidance.</p>
+                </div>
+                <!-- Service 2 -->
+                <div
+                    class="service-card p-6 rounded-2xl bg-slate-900 border border-slate-800 transition-all group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-500/20 transition-colors">
+                        💳</div>
+                    <h3 class="text-lg font-bold text-white mb-2">PAN Card</h3>
+                    <p class="text-sm text-slate-400">New PAN application, correction, or reprint services.</p>
+                </div>
+                <!-- Service 3 -->
+                <div
+                    class="service-card p-6 rounded-2xl bg-slate-900 border border-slate-800 transition-all group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-green-500/20 transition-colors">
+                        🚗</div>
+                    <h3 class="text-lg font-bold text-white mb-2">Driving Licence</h3>
+                    <p class="text-sm text-slate-400">Learner's licence, renewal, and appointment booking assistance.
+                    </p>
+                </div>
+                <!-- Service 4 -->
+                <div
+                    class="service-card p-6 rounded-2xl bg-slate-900 border border-slate-800 transition-all group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-purple-500/20 transition-colors">
+                        💻</div>
+                    <h3 class="text-lg font-bold text-white mb-2">CSC Registration</h3>
+                    <p class="text-sm text-slate-400">New VLE registration and business support services.</p>
+                </div>
+            </div>
+
+            <!-- Trust Indicators -->
+            <div
+                class="border-t border-slate-800 pt-10 flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🔒</span>
+                    <span class="font-semibold">Secure Payment</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">👨‍💻</span>
+                    <span class="font-semibold">Verified Operators</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">📞</span>
+                    <span class="font-semibold">Instant Support</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page" class="page hidden max-w-md mx-auto">
+            <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-white">Welcome Back</h2>
+                    <p class="text-slate-400 text-sm mt-2">Login to access your dashboard</p>
+                </div>
+                <form id="login-form" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Username</label>
+                        <input type="text" id="login-username"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Password</label>
+                        <input type="password" id="login-password"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+                            required>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all">Login
+                        Securely</button>
+                </form>
+                <p class="mt-6 text-center text-slate-400 text-sm">
+                    New user? <button onclick="showPage('register')"
+                        class="text-brand-400 hover:text-brand-300 font-medium">Create Account</button>
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="register-page" class="page hidden max-w-md mx-auto">
+            <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-white">Create Account</h2>
+                    <p class="text-slate-400 text-sm mt-2">Join thousands of satisfied customers</p>
+                </div>
+                <form id="register-form" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Username</label>
+                        <input type="text" id="reg-username"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Password</label>
+                        <input type="password" id="reg-password"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
+                            required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Account Type</label>
+                        <select id="reg-role"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                            <option value="user">Customer</option>
+                            <option value="operator">CSC Operator</option>
+                        </select>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-green-600 hover:bg-green-500 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-green-500/20 transition-all">Register
+                        Now</button>
+                </form>
+                <p class="mt-6 text-center text-slate-400 text-sm">
+                    Already have an account? <button onclick="showPage('login')"
+                        class="text-brand-400 hover:text-brand-300 font-medium">Login</button>
+                </p>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard-page" class="page hidden">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">My Dashboard</h2>
+                    <p class="text-slate-400">Manage your bookings and documents</p>
+                </div>
+                <div class="bg-slate-900 px-4 py-2 rounded-lg border border-slate-800">
+                    <span class="text-slate-400 text-sm">Wallet Balance:</span>
+                    <span class="text-white font-bold ml-2">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Booking Section -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <span
+                                class="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center text-brand-500 text-sm">📅</span>
+                            New Booking
+                        </h3>
+                        <form id="booking-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Select
+                                        Service</label>
+                                    <select id="book-service"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all">
+                                        <option value="General Consultation">General Consultation</option>
+                                        <option value="Aadhar Services">Aadhar Services</option>
+                                        <option value="PAN Card">PAN Card Services</option>
+                                        <option value="Driving Licence">Driving Licence</option>
+                                        <option value="CSC Registration">CSC Registration</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-400 uppercase mb-2">Preferred
+                                        Time</label>
+                                    <input type="datetime-local" id="book-time"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition-all"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-slate-950 rounded-xl p-4 border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-slate-400">Consultation Fee</p>
+                                    <p class="text-xs text-slate-500">Includes 15 mins video call</p>
+                                </div>
+                                <p class="text-2xl font-bold text-white">₹50.00</p>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-semibold shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-2">
+                                <span>Proceed to Pay</span>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                        <h3 class="text-xl font-bold mb-6">Recent Appointments</h3>
+                        <div id="appointments-list" class="space-y-4">
+                            <!-- Dynamic Content -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Profile Card -->
+                    <div
+                        class="bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-2xl border border-slate-800 text-center">
+                        <div
+                            class="w-20 h-20 bg-slate-800 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
+                            👤</div>
+                        <h3 id="user-name-display" class="text-lg font-bold text-white">User</h3>
+                        <p class="text-sm text-slate-400 mb-6">Verified Customer</p>
+                        <button
+                            class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg text-sm font-medium transition-all">Edit
+                            Profile</button>
+                    </div>
+
+                    <!-- Support -->
+                    <div class="bg-brand-900/20 p-6 rounded-2xl border border-brand-500/20">
+                        <h3 class="text-lg font-bold text-white mb-2">Need Help?</h3>
+                        <p class="text-sm text-slate-400 mb-4">Our support team is available 24/7 to assist you.</p>
+                        <button class="text-brand-400 text-sm font-medium hover:text-brand-300">Contact Support
+                            →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Call Page -->
+        <div id="call-page" class="page hidden">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Live Consultation</h2>
+                        <p class="text-slate-400 text-sm">Secure End-to-End Encrypted</p>
+                    </div>
+                    <button onclick="endCall()"
+                        class="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-red-500/20 transition-all">End
+                        Call</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+                    <div
+                        class="lg:col-span-2 bg-black rounded-2xl overflow-hidden relative shadow-2xl border border-slate-800">
+                        <video id="remote-video" autoplay class="w-full h-full object-cover"></video>
+                        <div
+                            class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            Operator
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 flex flex-col">
+                        <div class="bg-black rounded-xl overflow-hidden aspect-video mb-4 relative">
+                            <video id="local-video" autoplay muted class="w-full h-full object-cover"></video>
+                            <span class="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-xs">You</span>
+                        </div>
+                        <div class="flex-1 bg-slate-950 rounded-xl p-4 border border-slate-800">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Chat</h4>
+                            <div class="text-center text-slate-500 text-sm mt-10">Chat feature coming soon...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Verification Modal -->
+        <div id="payment-modal"
+            class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <div class="bg-slate-900 text-white p-8 max-w-md w-full rounded-3xl border border-slate-800 shadow-2xl">
+                <div class="text-center mb-6">
+                    <div
+                        class="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                        💳</div>
+                    <h3 class="text-xl font-bold">Complete Payment</h3>
+                    <p class="text-slate-400 text-sm mt-2">A new tab has opened. Please complete the payment and enter
+                        the Transaction ID below.</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-6">
+                    <label class="block text-xs font-medium text-slate-500 uppercase mb-2">Transaction ID / Payment
+                        ID</label>
+                    <input type="text" id="payment-id-input" placeholder="e.g. pay_N2..."
+                        class="w-full bg-transparent text-white focus:outline-none font-mono">
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="verifyManualPayment()"
+                        class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl font-medium transition-all">Verify
+                        & Print Receipt</button>
+                    <button onclick="closePaymentModal()"
+                        class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-medium transition-all">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Modal -->
+        <div id="receipt-modal"
+            class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <div class="bg-white text-black p-8 max-w-sm w-full rounded-lg relative shadow-2xl">
+                <button onclick="closeReceipt()"
+                    class="absolute top-2 right-2 text-gray-400 hover:text-black text-xl">&times;</button>
+
+                <div id="receipt-area" class="dot-matrix border-2 border-dashed border-gray-800 p-6 bg-yellow-50/50">
+                    <div class="text-center border-b-2 border-dashed border-gray-800 pb-4 mb-4">
+                        <h2 class="text-3xl font-bold tracking-tighter">DIGITAL SEVA</h2>
+                        <p class="text-sm uppercase tracking-widest">Official Receipt</p>
+                    </div>
+
+                    <div class="space-y-3 mb-6 text-sm font-bold text-gray-800">
+                        <div class="flex justify-between">
+                            <span>DATE:</span>
+                            <span id="rcpt-date"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>TXN ID:</span>
+                            <span id="rcpt-id"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>CUSTOMER:</span>
+                            <span id="rcpt-user"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>SERVICE:</span>
+                            <span id="rcpt-service">Consultation</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t-2 border-dashed border-gray-800 pt-4 mb-4">
+                        <div class="flex justify-between font-bold text-2xl">
+                            <span>TOTAL</span>
+                            <span>₹50.00</span>
+                        </div>
+                        <div class="text-center text-xs mt-2 font-bold border border-black px-2 py-1 inline-block">
+                            PAYMENT SUCCESSFUL
+                        </div>
+                    </div>
+
+                    <div class="text-center text-xs mt-8 opacity-75">
+                        <p>*** THANK YOU ***</p>
+                        <p>Computer Generated Receipt</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex gap-3">
+                    <button onclick="window.print()"
+                        class="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-lg font-sans font-medium shadow-lg shadow-brand-500/20">Print
+                        Receipt</button>
+                    <button onclick="closeReceipt()"
+                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2.5 rounded-lg font-sans font-medium">Close</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
