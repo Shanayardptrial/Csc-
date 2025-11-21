@@ -1,4 +1,13 @@
-const socket = io();
+let socket = null;
+try {
+    if (typeof io !== 'undefined') {
+        socket = io();
+    } else {
+        console.warn('Socket.io not loaded. Real-time features will be disabled.');
+    }
+} catch (e) {
+    console.error('Socket initialization failed:', e);
+}
 let currentUser = null;
 let currentAppointmentId = null;
 let currentServiceType = 'General Consultation';
@@ -196,4 +205,13 @@ function endCall() {
         video.srcObject = null;
     }
     showPage('dashboard');
+}
+
+// All Services Modal
+function openAllServices() {
+    document.getElementById('all-services-modal').classList.remove('hidden');
+}
+
+function closeAllServices() {
+    document.getElementById('all-services-modal').classList.add('hidden');
 }

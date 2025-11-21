@@ -47,6 +47,49 @@
             box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.3);
         }
 
+        /* Animations */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .stagger-1 {
+            animation-delay: 100ms;
+        }
+
+        .stagger-2 {
+            animation-delay: 200ms;
+        }
+
+        .stagger-3 {
+            animation-delay: 300ms;
+        }
+
         /* Dot Matrix Print Style */
         .dot-matrix {
             font-family: 'VT323', monospace;
@@ -84,17 +127,17 @@
                 <div class="flex items-center gap-3">
                     <div
                         class="w-10 h-10 bg-gradient-to-br from-brand-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-500/20">
-                        <span class="text-xl font-bold text-white">DS</span>
+                        <span class="text-xl font-bold text-white">FC</span>
                     </div>
                     <div>
-                        <span class="block text-lg font-bold text-white leading-none">Digital Seva</span>
+                        <span class="block text-lg font-bold text-white leading-none">FriendsCscPoint</span>
                         <span class="text-xs text-slate-400 uppercase tracking-wider">Verified Kendra</span>
                     </div>
                 </div>
                 <div id="nav-links" class="flex items-center space-x-6">
                     <button onclick="showPage('landing')"
                         class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Home</button>
-                    <button onclick="showPage('landing')"
+                    <button onclick="openAllServices()"
                         class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Services</button>
                     <button id="login-btn" onclick="showPage('login')"
                         class="bg-white text-slate-900 hover:bg-brand-50 px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-white/10">Login</button>
@@ -122,9 +165,9 @@
                     Online Consultation Available
                 </div>
                 <h1 class="text-5xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight mb-8">
-                    Your Trusted Partner for <br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-600">Government
-                        Services</span>
+                    A better way to solve <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-600">csc related
+                        problems</span>
                 </h1>
                 <p class="text-lg text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
                     Skip the long queues. Get expert assistance for Aadhar, PAN, Driving Licence, and more directly from
@@ -135,7 +178,7 @@
                         class="w-full sm:w-auto px-8 py-4 rounded-full text-white bg-brand-600 hover:bg-brand-500 font-semibold shadow-lg shadow-brand-500/25 transition-all hover:scale-105">
                         Book Consultation - ₹50
                     </button>
-                    <button
+                    <button onclick="openAllServices()"
                         class="w-full sm:w-auto px-8 py-4 rounded-full text-slate-300 bg-slate-800 hover:bg-slate-700 font-medium border border-slate-700 transition-all">
                         View All Services
                     </button>
@@ -274,7 +317,7 @@
 
         <!-- Dashboard -->
         <div id="dashboard-page" class="page hidden">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 animate-slide-up">
                 <div>
                     <h2 class="text-3xl font-bold text-white">My Dashboard</h2>
                     <p class="text-slate-400">Manage your bookings and documents</p>
@@ -288,7 +331,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Booking Section -->
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 animate-slide-up stagger-1">
                         <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
                             <span
                                 class="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center text-brand-500 text-sm">📅</span>
@@ -338,7 +381,7 @@
                     </div>
 
                     <!-- Recent Activity -->
-                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 animate-slide-up stagger-2">
                         <h3 class="text-xl font-bold mb-6">Recent Appointments</h3>
                         <div id="appointments-list" class="space-y-4">
                             <!-- Dynamic Content -->
@@ -350,7 +393,7 @@
                 <div class="space-y-6">
                     <!-- Profile Card -->
                     <div
-                        class="bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-2xl border border-slate-800 text-center">
+                        class="bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-2xl border border-slate-800 text-center animate-slide-up stagger-1">
                         <div
                             class="w-20 h-20 bg-slate-800 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
                             👤</div>
@@ -362,7 +405,7 @@
                     </div>
 
                     <!-- Support -->
-                    <div class="bg-brand-900/20 p-6 rounded-2xl border border-brand-500/20">
+                    <div class="bg-brand-900/20 p-6 rounded-2xl border border-brand-500/20 animate-slide-up stagger-2">
                         <h3 class="text-lg font-bold text-white mb-2">Need Help?</h3>
                         <p class="text-sm text-slate-400 mb-4">Our support team is available 24/7 to assist you.</p>
                         <button class="text-brand-400 text-sm font-medium hover:text-brand-300">Contact Support
@@ -492,6 +535,150 @@
                         Receipt</button>
                     <button onclick="closeReceipt()"
                         class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2.5 rounded-lg font-sans font-medium">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Services Modal -->
+        <div id="all-services-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] overflow-y-auto">
+            <div class="min-h-screen px-4 text-center">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div class="absolute inset-0 bg-slate-950/80"></div>
+                </div>
+
+                <span class="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+                <div
+                    class="inline-block w-full max-w-6xl p-6 my-8 text-left align-middle transition-all transform bg-slate-900 border border-slate-800 shadow-2xl rounded-3xl relative">
+
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">All Services</h2>
+                            <p class="text-slate-400">Comprehensive list of services available at FriendsCscPoint</p>
+                        </div>
+                        <button onclick="closeAllServices()"
+                            class="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Government Services -->
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🆔</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Aadhar
+                                Services</h3>
+                            <p class="text-xs text-slate-500">Update, Print, Link Mobile</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">💳</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">PAN Card</h3>
+                            <p class="text-xs text-slate-500">New, Correction, Reprint</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🗳️</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Voter ID</h3>
+                            <p class="text-xs text-slate-500">New Registration, Correction</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🛂</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Passport Seva
+                            </h3>
+                            <p class="text-xs text-slate-500">Application, Appointment</p>
+                        </div>
+
+                        <!-- Financial Services -->
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🏦</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Banking /
+                                DigiPay</h3>
+                            <p class="text-xs text-slate-500">Withdrawal, Deposit, Transfer</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">💰</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">ITR Filing
+                            </h3>
+                            <p class="text-xs text-slate-500">Income Tax Return</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">👴</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Jeevan Pramaan
+                            </h3>
+                            <p class="text-xs text-slate-500">Digital Life Certificate</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🌾</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">PM Kisan</h3>
+                            <p class="text-xs text-slate-500">KYC, Registration</p>
+                        </div>
+
+                        <!-- Utility & Travel -->
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">💡</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Electricity
+                                Bill</h3>
+                            <p class="text-xs text-slate-500">Bill Payment, New Connection</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🚆</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">IRCTC Booking
+                            </h3>
+                            <p class="text-xs text-slate-500">Train Tickets</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">📱</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Recharge</h3>
+                            <p class="text-xs text-slate-500">Mobile, DTH, FASTag</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🏥</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Ayushman
+                                Bharat</h3>
+                            <p class="text-xs text-slate-500">PMJAY Card Printing</p>
+                        </div>
+
+                        <!-- Business & Others -->
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🏭</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Udyam
+                                Registration</h3>
+                            <p class="text-xs text-slate-500">MSME Registration</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🥗</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">FSSAI</h3>
+                            <p class="text-xs text-slate-500">Food License</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">👷</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">E-Shram</h3>
+                            <p class="text-xs text-slate-500">Card Registration, Update</p>
+                        </div>
+                        <div
+                            class="p-4 bg-slate-950 rounded-xl border border-slate-800 hover:border-brand-500/50 transition-colors group">
+                            <div class="text-2xl mb-2">🛡️</div>
+                            <h3 class="font-bold text-white group-hover:text-brand-400 transition-colors">Insurance</h3>
+                            <p class="text-xs text-slate-500">Vehicle, Health, Life</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
