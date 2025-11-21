@@ -49,7 +49,7 @@ app.post('/api/register', async (req, res) => {
 
     if (error) {
         console.error('Registration error:', error);
-        return res.status(400).json({ success: false, error: 'Username already exists or error creating user' });
+        return res.status(400).json({ success: false, error: error.message || 'Username already exists or error creating user' });
     }
 
     res.json({ success: true, userId: data.id });
