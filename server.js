@@ -1,8 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const Database = require('better-sqlite3');
+const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 const Razorpay = require('razorpay');
 
@@ -10,7 +11,15 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const db = new Database('csc_portal.db');
+// Initialize Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('Error: SUPABASE_URL and SUPABASE_KEY are required in .env file');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Initialize Razorpay
 // REPLACE THESE WITH YOUR ACTUAL KEYS
@@ -28,41 +37,34 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Initialize Database
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT,
-    role TEXT DEFAULT 'user'
-  );
-  CREATE TABLE IF NOT EXISTS appointments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER,
-    operatorId INTEGER,
-    status TEXT DEFAULT 'pending_payment',
-    scheduledAt DATETIME,
-    paymentId TEXT,
-    amount INTEGER DEFAULT 5000
-  );
-`);
-
 // API Routes
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
     const { username, password, role } = req.body;
-    try {
-        const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-        const info = stmt.run(username, password, role || 'user');
-        res.json({ success: true, userId: info.lastInsertRowid });
-    } catch (err) {
-        res.status(400).json({ success: false, error: 'Username already exists' });
+
+    const { data, error } = await supabase
+        .from('users')
+        .insert([{ username, password, role: role || 'user' }])
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Registration error:', error);
+        return res.status(400).json({ success: false, error: 'Username already exists or error creating user' });
     }
+
+    res.json({ success: true, userId: data.id });
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    const stmt = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?');
-    const user = stmt.get(username, password);
+
+    const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password)
+        .single();
+
     if (user) {
         res.json({ success: true, user });
     } else {
@@ -70,11 +72,25 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-app.post('/api/book', (req, res) => {
+app.post('/api/book', async (req, res) => {
     const { userId, scheduledAt } = req.body;
-    const stmt = db.prepare('INSERT INTO appointments (userId, scheduledAt) VALUES (?, ?)');
-    const info = stmt.run(userId, scheduledAt);
-    res.json({ success: true, appointmentId: info.lastInsertRowid });
+
+    // Note: Supabase expects snake_case column names usually, but we map input camelCase to DB snake_case
+    const { data, error } = await supabase
+        .from('appointments')
+        .insert([{
+            user_id: userId,
+            scheduled_at: scheduledAt
+        }])
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Booking error:', error);
+        return res.status(500).json({ success: false, error: 'Booking failed' });
+    }
+
+    res.json({ success: true, appointmentId: data.id });
 });
 
 // Create Razorpay Order
@@ -83,16 +99,6 @@ app.post('/api/create-order', async (req, res) => {
     const amount = 5000; // ₹50.00 in paise
 
     try {
-        const options = {
-            amount: amount,
-            currency: "INR",
-            receipt: "order_rcptid_" + appointmentId,
-        };
-
-        // In a real scenario with valid keys:
-        // const order = await razorpay.orders.create(options);
-        // res.json({ success: true, order });
-
         // MOCKING for demonstration without keys:
         const mockOrder = {
             id: "order_" + Date.now(),
@@ -107,19 +113,47 @@ app.post('/api/create-order', async (req, res) => {
     }
 });
 
-app.post('/api/verify-payment', (req, res) => {
+app.post('/api/verify-payment', async (req, res) => {
     const { appointmentId, paymentId, orderId, signature } = req.body;
 
-    // Verify signature here using razorpay-node sdk in production
+    const { error } = await supabase
+        .from('appointments')
+        .update({
+            status: 'paid',
+            payment_id: paymentId
+        })
+        .eq('id', appointmentId);
 
-    const stmt = db.prepare('UPDATE appointments SET status = ?, paymentId = ? WHERE id = ?');
-    stmt.run('paid', paymentId, appointmentId);
+    if (error) {
+        console.error('Payment verification update error:', error);
+        return res.status(500).json({ success: false, error: 'Update failed' });
+    }
+
     res.json({ success: true });
 });
 
-app.get('/api/appointments', (req, res) => {
-    const stmt = db.prepare('SELECT * FROM appointments ORDER BY id DESC');
-    const appointments = stmt.all();
+app.get('/api/appointments', async (req, res) => {
+    const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .order('id', { ascending: false });
+
+    if (error) {
+        console.error('Fetch appointments error:', error);
+        return res.status(500).json({ success: false, appointments: [] });
+    }
+
+    // Map snake_case DB columns to camelCase for frontend compatibility
+    const appointments = data.map(apt => ({
+        id: apt.id,
+        userId: apt.user_id,
+        operatorId: apt.operator_id,
+        status: apt.status,
+        scheduledAt: apt.scheduled_at,
+        paymentId: apt.payment_id,
+        amount: apt.amount
+    }));
+
     res.json({ success: true, appointments });
 });
 
