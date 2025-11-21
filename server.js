@@ -17,6 +17,13 @@ const supabaseKey = process.env.SUPABASE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('Error: SUPABASE_URL and SUPABASE_KEY are required in .env file');
+} else {
+    console.log('--- CONFIG DEBUG ---');
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Key Length:', supabaseKey.length);
+    console.log('Key Start:', supabaseKey.substring(0, 10));
+    console.log('Key End:', supabaseKey.slice(-10));
+    console.log('--------------------');
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
