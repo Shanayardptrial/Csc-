@@ -3,7 +3,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 const Razorpay = require('razorpay');
 
@@ -11,18 +10,54 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+// Database setup - Use PostgreSQL on Render, SQLite locally
+let db;
+let isPostgres = false;
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error('Error: SUPABASE_URL and SUPABASE_KEY are required in .env file');
+if (process.env.DATABASE_URL) {
+    // Use PostgreSQL (Render)
+    const { Pool } = require('pg');
+    db = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    });
+    isPostgres = true;
+    console.log('Using PostgreSQL database');
+} else {
+    // Use SQLite (Local development)
+    const Database = require('better-sqlite3');
+    db = new Database('csc_portal.db');
+    isPostgres = false;
+    console.log('Using SQLite database');
+
+    // Create tables for SQLite
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT DEFAULT 'user',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS appointments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId INTEGER,
+            operatorId INTEGER,
+            status TEXT DEFAULT 'pending_payment',
+            scheduledAt DATETIME,
+            paymentId TEXT,
+            amount INTEGER DEFAULT 5000,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 // Initialize Razorpay
-// REPLACE THESE WITH YOUR ACTUAL KEYS
 const razorpay = new Razorpay({
     key_id: 'rzp_test_PLACEHOLDER',
     key_secret: 'YOUR_SECRET_KEY'
@@ -32,7 +67,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve index.html for root and client-side routing
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -41,72 +75,86 @@ app.get('/', (req, res) => {
 app.post('/api/register', async (req, res) => {
     const { username, password, role } = req.body;
 
-    const { data, error } = await supabase
-        .from('users')
-        .insert([{ username, password, role: role || 'user' }])
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Registration error:', error);
-        return res.status(400).json({ success: false, error: error.message || 'Username already exists or error creating user' });
+    try {
+        if (isPostgres) {
+            const result = await db.query(
+                'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id',
+                [username, password, role || 'user']
+            );
+            res.json({ success: true, userId: result.rows[0].id });
+        } else {
+            const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+            const info = stmt.run(username, password, role || 'user');
+            res.json({ success: true, userId: info.lastInsertRowid });
+        }
+    } catch (err) {
+        console.error('Registration error:', err);
+        res.status(400).json({ success: false, error: 'Username already exists' });
     }
-
-    res.json({ success: true, userId: data.id });
 });
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
-    const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .eq('password', password)
-        .single();
-
-    if (user) {
-        res.json({ success: true, user });
-    } else {
-        res.status(401).json({ success: false, error: 'Invalid credentials' });
+    try {
+        if (isPostgres) {
+            const result = await db.query(
+                'SELECT * FROM users WHERE username = $1 AND password = $2',
+                [username, password]
+            );
+            const user = result.rows[0];
+            if (user) {
+                res.json({ success: true, user });
+            } else {
+                res.status(401).json({ success: false, error: 'Invalid credentials' });
+            }
+        } else {
+            const stmt = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?');
+            const user = stmt.get(username, password);
+            if (user) {
+                res.json({ success: true, user });
+            } else {
+                res.status(401).json({ success: false, error: 'Invalid credentials' });
+            }
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, error: 'Login failed' });
     }
 });
 
 app.post('/api/book', async (req, res) => {
     const { userId, scheduledAt } = req.body;
 
-    // Note: Supabase expects snake_case column names usually, but we map input camelCase to DB snake_case
-    const { data, error } = await supabase
-        .from('appointments')
-        .insert([{
-            user_id: userId,
-            scheduled_at: scheduledAt
-        }])
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Booking error:', error);
-        return res.status(500).json({ success: false, error: 'Booking failed' });
+    try {
+        if (isPostgres) {
+            const result = await db.query(
+                'INSERT INTO appointments (user_id, scheduled_at) VALUES ($1, $2) RETURNING id',
+                [userId, scheduledAt]
+            );
+            res.json({ success: true, appointmentId: result.rows[0].id });
+        } else {
+            const stmt = db.prepare('INSERT INTO appointments (userId, scheduledAt) VALUES (?, ?)');
+            const info = stmt.run(userId, scheduledAt);
+            res.json({ success: true, appointmentId: info.lastInsertRowid });
+        }
+    } catch (err) {
+        console.error('Booking error:', err);
+        res.status(500).json({ success: false, error: 'Booking failed' });
     }
-
-    res.json({ success: true, appointmentId: data.id });
 });
 
-// Create Razorpay Order
 app.post('/api/create-order', async (req, res) => {
     const { appointmentId } = req.body;
-    const amount = 5000; // ₹50.00 in paise
+    const amount = 5000;
 
     try {
-        // MOCKING for demonstration without keys:
         const mockOrder = {
             id: "order_" + Date.now(),
             amount: amount,
             currency: "INR"
         };
         res.json({ success: true, order: mockOrder });
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: 'Payment initiation failed' });
@@ -116,45 +164,46 @@ app.post('/api/create-order', async (req, res) => {
 app.post('/api/verify-payment', async (req, res) => {
     const { appointmentId, paymentId, orderId, signature } = req.body;
 
-    const { error } = await supabase
-        .from('appointments')
-        .update({
-            status: 'paid',
-            payment_id: paymentId
-        })
-        .eq('id', appointmentId);
-
-    if (error) {
-        console.error('Payment verification update error:', error);
-        return res.status(500).json({ success: false, error: 'Update failed' });
+    try {
+        if (isPostgres) {
+            await db.query(
+                'UPDATE appointments SET status = $1, payment_id = $2 WHERE id = $3',
+                ['paid', paymentId, appointmentId]
+            );
+        } else {
+            const stmt = db.prepare('UPDATE appointments SET status = ?, paymentId = ? WHERE id = ?');
+            stmt.run('paid', paymentId, appointmentId);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Payment verification error:', err);
+        res.status(500).json({ success: false, error: 'Update failed' });
     }
-
-    res.json({ success: true });
 });
 
 app.get('/api/appointments', async (req, res) => {
-    const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .order('id', { ascending: false });
-
-    if (error) {
-        console.error('Fetch appointments error:', error);
-        return res.status(500).json({ success: false, appointments: [] });
+    try {
+        if (isPostgres) {
+            const result = await db.query('SELECT * FROM appointments ORDER BY id DESC');
+            const appointments = result.rows.map(apt => ({
+                id: apt.id,
+                userId: apt.user_id,
+                operatorId: apt.operator_id,
+                status: apt.status,
+                scheduledAt: apt.scheduled_at,
+                paymentId: apt.payment_id,
+                amount: apt.amount
+            }));
+            res.json({ success: true, appointments });
+        } else {
+            const stmt = db.prepare('SELECT * FROM appointments ORDER BY id DESC');
+            const appointments = stmt.all();
+            res.json({ success: true, appointments });
+        }
+    } catch (err) {
+        console.error('Fetch appointments error:', err);
+        res.status(500).json({ success: false, appointments: [] });
     }
-
-    // Map snake_case DB columns to camelCase for frontend compatibility
-    const appointments = data.map(apt => ({
-        id: apt.id,
-        userId: apt.user_id,
-        operatorId: apt.operator_id,
-        status: apt.status,
-        scheduledAt: apt.scheduled_at,
-        paymentId: apt.payment_id,
-        amount: apt.amount
-    }));
-
-    res.json({ success: true, appointments });
 });
 
 // Socket.io
