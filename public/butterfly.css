@@ -1,0 +1,83 @@
+/* Butterfly Animation */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-20px) translateX(10px) rotate(5deg);
+    }
+    50% {
+        transform: translateY(-10px) translateX(-10px) rotate(-5deg);
+    }
+    75% {
+        transform: translateY(-30px) translateX(5px) rotate(3deg);
+    }
+}
+
+@keyframes flutter {
+    0%, 100% {
+        transform: scaleX(1);
+    }
+    50% {
+        transform: scaleX(0.8);
+    }
+}
+
+.butterfly {
+    position: fixed;
+    font-size: 2rem;
+    animation: float 15s ease-in-out infinite;
+    opacity: 0.6;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.butterfly::before {
+    content: '🦋';
+    display: inline-block;
+    animation: flutter 0.3s ease-in-out infinite;
+}
+
+.butterfly:nth-child(1) {
+    top: 20%;
+    left: 10%;
+    animation-duration: 12s;
+    animation-delay: 0s;
+}
+
+.butterfly:nth-child(2) {
+    top: 60%;
+    left: 80%;
+    animation-duration: 18s;
+    animation-delay: 2s;
+}
+
+.butterfly:nth-child(3) {
+    top: 40%;
+    left: 30%;
+    animation-duration: 15s;
+    animation-delay: 4s;
+    font-size: 1.5rem;
+}
+
+.butterfly:nth-child(4) {
+    top: 70%;
+    left: 60%;
+    animation-duration: 20s;
+    animation-delay: 1s;
+}
+
+.butterfly:nth-child(5) {
+    top: 15%;
+    left: 70%;
+    animation-duration: 14s;
+    animation-delay: 3s;
+    font-size: 1.8rem;
+}
+
+.butterfly:nth-child(6) {
+    top: 85%;
+    left: 20%;
+    animation-duration: 16s;
+    animation-delay: 5s;
+}
